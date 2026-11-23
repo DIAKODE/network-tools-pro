@@ -4,8 +4,8 @@
   <p><strong>A modern, lightweight Windows desktop suite for real-time latency monitoring, bandwidth analytics, DNS benchmarking, and LAN device discovery.</strong></p>
 
   <p>
-    <a href="https://github.com/YOUR_USERNAME/network-tools-pro/releases">
-      <img src="https://img.shields.io/github/v/release/YOUR_USERNAME/network-tools-pro?style=for-the-badge&color=00D2FF" alt="Release" />
+    <a href="https://github.com/DIAKODE/network-tools-pro/releases">
+      <img src="https://img.shields.io/github/v/release/DIAKODE/network-tools-pro?style=for-the-badge&color=00D2FF" alt="Release" />
     </a>
     <img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Platform" />
     <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
@@ -81,7 +81,7 @@
 ## 🚀 Download & Installation
 
 ### Option 1: Portable Executable (Recommended)
-1. Go to the [**Releases**](https://github.com/YOUR_USERNAME/network-tools-pro/releases) page.
+1. Go to the [**Releases**](https://github.com/DIAKODE/network-tools-pro/releases) page.
 2. Download **`Network Tools Pro.exe`** (standalone, no Python required).
 3. Run it directly on Windows 10 or Windows 11.
 
@@ -89,7 +89,7 @@
 
 ### Option 2: Run from Source
 ```bash
-git clone [https://github.com/YOUR_USERNAME/network-tools-pro.git](https://github.com/YOUR_USERNAME/network-tools-pro.git)
+git clone [https://github.com/DIAKODE/network-tools-pro.git](https://github.com/DIAKODE/network-tools-pro.git)
 cd network-tools-pro
 pip install -r requirements.txt
 python main.py
