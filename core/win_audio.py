@@ -7,8 +7,11 @@ import sys
 import time
 import wave
 
+import psutil
 from plyer import notification
+
 from core.config import APP_NAME, SFX_PROFILES
+from core.net_etw import PROTECTED_PROCESSES
 
 try:
     import winsound
@@ -118,7 +121,6 @@ def set_window_click_through(tk_window, enable):
             style = style & ~WS_EX_TRANSPARENT
 
         user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style)
-        # اعمال فوری تغییر استایل پنجره
         SWP_NOMOVE = 0x0002
         SWP_NOSIZE = 0x0001
         SWP_NOZORDER = 0x0004
@@ -352,14 +354,12 @@ class SoundManager:
                 winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
             except Exception:
                 pass
-                import os
-import sys
-import ctypes
-import psutil
-from core.net_etw import PROTECTED_PROCESSES
 
 
+# ================= دسترسی Admin و بستن پروسه‌ها =================
 def is_admin() -> bool:
+    if os.name != "nt":
+        return False
     try:
         return bool(ctypes.windll.shell32.IsUserAnAdmin())
     except Exception:
@@ -369,19 +369,11 @@ def is_admin() -> bool:
 def relaunch_as_admin(instance_mgr=None, extra_args: str = "--tab net") -> bool:
     """
     ری‌استارت برنامه با دسترسی Administrator و باز شدن مستقیم در تب Network Usage.
-    اگر کاربر پنجره UAC را Cancel کند، False برمی‌گرداند و برنامه فعلی بسته نمی‌شود.
+    اگر کاربر پنجره UAC را Cancel کند، False برمی‌گرداند.
     """
-    # آزادسازی موقت Mutex تک‌اجرایی تا نسخه جدید بدون مشکل باز شود
-    released_mutex = False
     if instance_mgr is not None:
         try:
-            if hasattr(instance_mgr, "release"):
-                instance_mgr.release()
-                released_mutex = True
-            elif getattr(instance_mgr, "mutex", None):
-                ctypes.windll.kernel32.CloseHandle(instance_mgr.mutex)
-                instance_mgr.mutex = None
-                released_mutex = True
+            instance_mgr.cleanup()
         except Exception:
             pass
 
@@ -393,18 +385,11 @@ def relaunch_as_admin(instance_mgr=None, extra_args: str = "--tab net") -> bool:
         script = os.path.abspath(sys.argv[0])
         params = f'"{script}" {extra_args}'
 
-    res = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, params, os.getcwd(), 1)
-    if res > 32:
-        return True
-
-    # کاربر Cancel زده؛ دوباره Mutex را پس بگیر
-    if released_mutex and instance_mgr is not None:
-        try:
-            if hasattr(instance_mgr, "acquire"):
-                instance_mgr.acquire()
-        except Exception:
-            pass
-    return False
+    try:
+        res = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, params, os.getcwd(), 1)
+        return res > 32
+    except Exception:
+        return False
 
 
 def kill_app_processes(app_name: str) -> tuple[int, int]:
