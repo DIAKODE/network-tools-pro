@@ -3,13 +3,8 @@
   <h1>Network Tools Pro</h1>
   <p><strong>جعبه ابزار مدرن، سبک و رایگان ویندوز برای مانیتورینگ زنده پینگ، تحلیل پهنای باند، بنچمارک DNS و شناسایی دستگاه‌های شبکه محلی</strong></p>
 
-  <p>
-    <a href="README.md">
-      <img src="https://img.shields.io/badge/Language-English-1E293B?style=for-the-badge" alt="English" />
-    </a>
-    <a href="README.fa.md">
-      <img src="https://img.shields.io/badge/زبان-فارسی-00D2FF?style=for-the-badge" alt="فارسی" />
-    </a>
+<p>
+    🌐 <a href="README.md"><strong>English</strong></a> &nbsp;|&nbsp; <strong>راهنمای فارسی</strong>
   </p>
 
   <p>
