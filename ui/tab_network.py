@@ -6,6 +6,7 @@ from PIL import ImageTk
 
 from core.config import COLOR_GREEN, COLOR_ORANGE, COLOR_RED, format_bytes
 from core.net_engine import run_speedtest
+from ui.apps_panel import LiveAppsPanel
 from ui.graphics import render_net_graph_base, render_net_graph_frame
 
 
@@ -22,6 +23,7 @@ class NetworkTabView(ctk.CTkFrame):
         self._base_img = None
         self._meta = None
         self._photo = None
+        self._last_apps = []
 
         self._build_ui()
 
@@ -81,21 +83,26 @@ class NetworkTabView(ctk.CTkFrame):
         self.btn_speedtest.pack(side="right", padx=10, pady=7)
 
         # نمودار زنده پهنای باند
-        self.net_graph_frame = ctk.CTkFrame(self, height=160, corner_radius=14, border_width=1, bg_color=T["bg"])
+        self.net_graph_frame = ctk.CTkFrame(self, height=150, corner_radius=14, border_width=1, bg_color=T["bg"])
         self.net_graph_frame.pack(fill="x", pady=(8, 6))
         self.net_graph_frame.pack_propagate(False)
         self.lbl_net_graph_title = ctk.CTkLabel(self.net_graph_frame, text="LIVE BANDWIDTH MONITOR  •  HD ANTI-ALIASED  (HOVER TO INSPECT)", font=("Consolas", 10, "bold"))
         self.lbl_net_graph_title.pack(pady=(8, 0))
         self.net_canvas = tk.Canvas(self.net_graph_frame, highlightthickness=0, cursor="crosshair")
-        self.net_canvas.pack(fill="both", expand=True, padx=12, pady=(4, 12))
+        self.net_canvas.pack(fill="both", expand=True, padx=12, pady=(4, 10))
         self.net_canvas.bind("<Configure>", lambda e: self.draw_net_graph(rebuild_base=True))
         self.net_canvas.bind("<Motion>", self._on_hover)
         self.net_canvas.bind("<Leave>", self._on_leave)
 
-        self.lbl_apps_title = ctk.CTkLabel(self, text="LIVE CONNECTED APPLICATIONS", font=("Consolas", 11, "bold"))
-        self.lbl_apps_title.pack(pady=(2, 0))
-        self.app_list_box = ctk.CTkTextbox(self, state="disabled", font=("Consolas", 12), border_width=1, corner_radius=12)
-        self.app_list_box.pack(fill="both", expand=True, pady=(4, 4))
+        # جدول تعاملی مصرف اینترنت به تفکیک هر برنامه + KILL
+        self.apps_panel = LiveAppsPanel(
+            self,
+            theme=T,
+            is_admin_mode=getattr(self.app, "is_etw_active", False),
+            on_request_admin=self.app.request_admin_elevation,
+            on_reset_totals=self.app.reset_app_usage_totals,
+        )
+        self.apps_panel.pack(fill="both", expand=True, pady=(2, 4))
 
     def apply_theme(self, T, icons):
         self.configure(fg_color=T["bg"])
@@ -131,9 +138,12 @@ class NetworkTabView(ctk.CTkFrame):
         self.lbl_net_graph_title.configure(text_color=T["muted"], bg_color=T["card"])
         self.net_canvas.configure(bg=T["card"])
 
-        self.lbl_apps_title.configure(text_color=T["muted"], bg_color=T["bg"])
-        self.app_list_box.configure(fg_color=T["inner"], bg_color=T["bg"], text_color=T["accent1"], border_color=T["border"])
+        self.apps_panel.apply_theme(T)
         self.draw_net_graph(rebuild_base=True)
+
+    def on_tab_selected(self):
+        self.apps_panel.update_rows(self._last_apps)
+        self.after(30, lambda: self.draw_net_graph(rebuild_base=True))
 
     def update_network(self, dl, ul, total_dl, total_ul, apps, is_active_tab):
         if dl < 1024:
@@ -165,14 +175,12 @@ class NetworkTabView(ctk.CTkFrame):
         self.net_times.append(now_str)
         self.net_times.pop(0)
 
+        if isinstance(apps, list) and (not apps or isinstance(apps[0], dict)):
+            self._last_apps = apps
+
         if is_active_tab:
             self.draw_net_graph(rebuild_base=True)
-
-        self.app_list_box.configure(state="normal")
-        self.app_list_box.delete("1.0", "end")
-        app_text = "\n".join([f"  ■  {app}" for app in sorted(apps)]) if apps else "  [ No active connections detected ]"
-        self.app_list_box.insert("1.0", app_text)
-        self.app_list_box.configure(state="disabled")
+            self.apps_panel.update_rows(self._last_apps)
 
     def start_speedtest(self):
         if self.speedtest_running:
