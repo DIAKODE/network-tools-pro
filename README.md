@@ -3,6 +3,14 @@
   <h1>Network Tools Pro</h1>
   <p><strong>A modern, lightweight Windows desktop suite for real-time latency monitoring, bandwidth analytics, DNS benchmarking, and LAN device discovery.</strong></p>
 
+<p>
+    <a href="README.md">
+      <img src="https://img.shields.io/badge/Language-English-00D2FF?style=for-the-badge" alt="English" />
+    </a>
+    <a href="README.fa.md">
+      <img src="https://img.shields.io/badge/راهنمای_فارسی-FA-1E293B?style=for-the-badge" alt="راهنمای فارسی" />
+    </a>
+  </p>
   <p>
     <a href="https://github.com/DIAKODE/network-tools-pro/releases">
       <img src="https://img.shields.io/github/v/release/DIAKODE/network-tools-pro?style=for-the-badge&color=00D2FF" alt="Release" />
