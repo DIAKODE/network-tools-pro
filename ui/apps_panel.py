@@ -4,6 +4,12 @@ import customtkinter as ctk
 from core.config import COLOR_GREEN, COLOR_ORANGE, COLOR_RED
 from core.win_audio import kill_app_processes, show_os_notification
 
+# عرض پیکسلی ثابت ستون‌های سمت راست برای تراز عمودی دقیق در تمام ردیف‌ها
+COL_W_ACTION = 56
+COL_W_TOTAL = 88
+COL_W_UPLOAD = 102
+COL_W_DOWNLOAD = 102
+
 
 def _fmt_rate(bps: float) -> str:
     if bps < 100:
@@ -60,7 +66,7 @@ class LiveAppsPanel(ctk.CTkFrame):
 
         # هدر پنل
         self.hdr = ctk.CTkFrame(self, fg_color=T["card"], corner_radius=0)
-        self.hdr.pack(fill="x", padx=12, pady=(10, 6))
+        self.hdr.pack(fill="x", padx=12, pady=(7, 4))
 
         self.hdr_left = ctk.CTkFrame(self.hdr, fg_color=T["card"], corner_radius=0)
         self.hdr_left.pack(side="left", fill="x", expand=True)
@@ -68,7 +74,7 @@ class LiveAppsPanel(ctk.CTkFrame):
         self.lbl_title = ctk.CTkLabel(
             self.hdr_left,
             text="PER-APP NETWORK MONITOR",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             text_color=T["text"],
             bg_color=T["card"],
         )
@@ -84,7 +90,7 @@ class LiveAppsPanel(ctk.CTkFrame):
             bg_color=T["card"],
             text_color=badge_color,
             corner_radius=6,
-            height=20,
+            height=19,
         )
         self.lbl_mode_badge.pack(side="left", padx=(8, 0))
 
@@ -93,8 +99,8 @@ class LiveAppsPanel(ctk.CTkFrame):
             self.btn_action = ctk.CTkButton(
                 self.hdr,
                 text="RESET TOTALS",
-                width=105,
-                height=26,
+                width=102,
+                height=24,
                 corner_radius=7,
                 font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
                 fg_color=T["card_elev"],
@@ -108,8 +114,8 @@ class LiveAppsPanel(ctk.CTkFrame):
             self.btn_action = ctk.CTkButton(
                 self.hdr,
                 text="ENABLE LIVE APP USAGE (ADMIN)",
-                width=212,
-                height=26,
+                width=208,
+                height=24,
                 corner_radius=7,
                 font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
                 fg_color=T["accent1"],
@@ -131,54 +137,68 @@ class LiveAppsPanel(ctk.CTkFrame):
                 bg_color=T["card"],
                 anchor="w",
             )
-            self.banner.pack(fill="x", padx=12, pady=(0, 6))
+            self.banner.pack(fill="x", padx=12, pady=(0, 4))
 
-        # ردیف عنوان ستون‌ها
+        # ردیف عنوان ستون‌ها (قفل‌شده از سمت راست، هم‌تراز با ردیف‌ها و اسکرول‌بار)
         self.col_hdr = ctk.CTkFrame(
             self,
             fg_color=T["card_elev"],
             bg_color=T["card"],
             corner_radius=7,
-            height=26,
+            height=24,
         )
-        self.col_hdr.pack(fill="x", padx=10, pady=(0, 4))
+        self.col_hdr.pack(fill="x", padx=10, pady=(0, 3))
         self.col_hdr.pack_propagate(False)
 
-        self.col_hdr.grid_columnconfigure(0, weight=4)
-        self.col_hdr.grid_columnconfigure(1, weight=2)
-        self.col_hdr.grid_columnconfigure(2, weight=2)
-        self.col_hdr.grid_columnconfigure(3, weight=2)
-        self.col_hdr.grid_columnconfigure(4, weight=1)
-
-        headers = [
-            ("APPLICATION", "w", 0),
-            ("DOWNLOAD", "e", 1),
-            ("UPLOAD", "e", 2),
-            ("TOTAL", "e", 3),
-            ("ACTION", "e", 4),
-        ]
+        hdr_font = ctk.CTkFont(family="Consolas", size=10, weight="bold")
         self._col_labels = []
-        for text, anchor, col in headers:
-            lbl = ctk.CTkLabel(
-                self.col_hdr,
-                text=text,
-                font=ctk.CTkFont(family="Consolas", size=10, weight="bold"),
-                text_color=T["muted"],
-                bg_color=T["card_elev"],
-                anchor=anchor,
-            )
-            lbl.grid(row=0, column=col, sticky="ew", padx=(10 if col == 0 else 6, 10 if col == 4 else 6), pady=4)
-            self._col_labels.append(lbl)
 
-        # لیست اسکرول‌پذیر ردیف‌ها (متناسب با ارتفاع پنجره 860px)
+        # چیدمان از راست به چپ با عرض ثابت تا کاملاً روی ستون ردیف‌ها قفل شود
+        lbl_h_act = ctk.CTkLabel(
+            self.col_hdr, text="ACTION", width=COL_W_ACTION, anchor="e",
+            font=hdr_font, text_color=T["muted"], bg_color=T["card_elev"],
+        )
+        lbl_h_act.pack(side="right", padx=(6, 24), pady=3)
+        self._col_labels.append(lbl_h_act)
+
+        lbl_h_tot = ctk.CTkLabel(
+            self.col_hdr, text="TOTAL", width=COL_W_TOTAL, anchor="e",
+            font=hdr_font, text_color=T["muted"], bg_color=T["card_elev"],
+        )
+        lbl_h_tot.pack(side="right", padx=6, pady=3)
+        self._col_labels.append(lbl_h_tot)
+
+        lbl_h_ul = ctk.CTkLabel(
+            self.col_hdr, text="UPLOAD", width=COL_W_UPLOAD, anchor="e",
+            font=hdr_font, text_color=T["muted"], bg_color=T["card_elev"],
+        )
+        lbl_h_ul.pack(side="right", padx=6, pady=3)
+        self._col_labels.append(lbl_h_ul)
+
+        lbl_h_dl = ctk.CTkLabel(
+            self.col_hdr, text="DOWNLOAD", width=COL_W_DOWNLOAD, anchor="e",
+            font=hdr_font, text_color=T["muted"], bg_color=T["card_elev"],
+        )
+        lbl_h_dl.pack(side="right", padx=6, pady=3)
+        self._col_labels.append(lbl_h_dl)
+
+        lbl_h_app = ctk.CTkLabel(
+            self.col_hdr, text="APPLICATION", anchor="w",
+            font=hdr_font, text_color=T["muted"], bg_color=T["card_elev"],
+        )
+        lbl_h_app.pack(side="left", fill="x", expand=True, padx=(10, 6), pady=3)
+        self._col_labels.append(lbl_h_app)
+
+        # لیست اسکرول‌پذیر ردیف‌ها
         self.scroll = ctk.CTkScrollableFrame(
             self,
             fg_color=T["card"],
+            corner_radius=0,
             scrollbar_button_color=T["border"],
             scrollbar_button_hover_color=T["accent1"],
-            height=110,
+            height=185,
         )
-        self.scroll.pack(fill="both", expand=True, padx=6, pady=(0, 8))
+        self.scroll.pack(fill="both", expand=True, padx=6, pady=(0, 6))
 
         self.lbl_empty = ctk.CTkLabel(
             self.scroll,
@@ -195,15 +215,59 @@ class LiveAppsPanel(ctk.CTkFrame):
             self.scroll,
             fg_color=T["card_elev"],
             bg_color=T["card"],
-            corner_radius=8,
-            height=34,
+            corner_radius=7,
+            height=28,
         )
         frame.pack_propagate(False)
-        frame.grid_columnconfigure(0, weight=4)
-        frame.grid_columnconfigure(1, weight=2)
-        frame.grid_columnconfigure(2, weight=2)
-        frame.grid_columnconfigure(3, weight=2)
-        frame.grid_columnconfigure(4, weight=1)
+
+        # اول ستون‌های ثابت از راست بسته می‌شوند تا طول اسم برنامه هرگز جابه‌جایشان نکند
+        btn_kill = ctk.CTkButton(
+            frame,
+            text="KILL",
+            width=COL_W_ACTION,
+            height=20,
+            corner_radius=5,
+            font=ctk.CTkFont(family="Consolas", size=10, weight="bold"),
+            fg_color="#3B151B" if self._is_dark() else "#FEE2E2",
+            bg_color=T["card_elev"],
+            hover_color=COLOR_RED,
+            text_color=COLOR_RED,
+            text_color_disabled=T["muted"],
+        )
+        btn_kill.pack(side="right", padx=(6, 8), pady=4)
+
+        lbl_tot = ctk.CTkLabel(
+            frame,
+            text="—",
+            width=COL_W_TOTAL,
+            font=ctk.CTkFont(family="Consolas", size=11),
+            text_color=T["muted"],
+            bg_color=T["card_elev"],
+            anchor="e",
+        )
+        lbl_tot.pack(side="right", padx=6, pady=2)
+
+        lbl_ul = ctk.CTkLabel(
+            frame,
+            text="—",
+            width=COL_W_UPLOAD,
+            font=ctk.CTkFont(family="Consolas", size=11),
+            text_color=T["muted"],
+            bg_color=T["card_elev"],
+            anchor="e",
+        )
+        lbl_ul.pack(side="right", padx=6, pady=2)
+
+        lbl_dl = ctk.CTkLabel(
+            frame,
+            text="—",
+            width=COL_W_DOWNLOAD,
+            font=ctk.CTkFont(family="Consolas", size=11, weight="bold"),
+            text_color=T["muted"],
+            bg_color=T["card_elev"],
+            anchor="e",
+        )
+        lbl_dl.pack(side="right", padx=6, pady=2)
 
         lbl_name = ctk.CTkLabel(
             frame,
@@ -213,52 +277,7 @@ class LiveAppsPanel(ctk.CTkFrame):
             bg_color=T["card_elev"],
             anchor="w",
         )
-        lbl_name.grid(row=0, column=0, sticky="ew", padx=(10, 6), pady=4)
-
-        lbl_dl = ctk.CTkLabel(
-            frame,
-            text="—",
-            font=ctk.CTkFont(family="Consolas", size=11, weight="bold"),
-            text_color=T["muted"],
-            bg_color=T["card_elev"],
-            anchor="e",
-        )
-        lbl_dl.grid(row=0, column=1, sticky="ew", padx=6, pady=4)
-
-        lbl_ul = ctk.CTkLabel(
-            frame,
-            text="—",
-            font=ctk.CTkFont(family="Consolas", size=11),
-            text_color=T["muted"],
-            bg_color=T["card_elev"],
-            anchor="e",
-        )
-        lbl_ul.grid(row=0, column=2, sticky="ew", padx=6, pady=4)
-
-        lbl_tot = ctk.CTkLabel(
-            frame,
-            text="—",
-            font=ctk.CTkFont(family="Consolas", size=11),
-            text_color=T["muted"],
-            bg_color=T["card_elev"],
-            anchor="e",
-        )
-        lbl_tot.grid(row=0, column=3, sticky="ew", padx=6, pady=4)
-
-        btn_kill = ctk.CTkButton(
-            frame,
-            text="KILL",
-            width=54,
-            height=22,
-            corner_radius=6,
-            font=ctk.CTkFont(family="Consolas", size=10, weight="bold"),
-            fg_color="#3B151B" if self._is_dark() else "#FEE2E2",
-            bg_color=T["card_elev"],
-            hover_color=COLOR_RED,
-            text_color=COLOR_RED,
-            text_color_disabled=T["muted"],
-        )
-        btn_kill.grid(row=0, column=4, sticky="e", padx=(6, 8), pady=5)
+        lbl_name.pack(side="left", fill="x", expand=True, padx=(10, 6), pady=2)
 
         return {
             "frame": frame,
@@ -335,7 +354,7 @@ class LiveAppsPanel(ctk.CTkFrame):
             protected = item.get("protected", False)
 
             conn_suffix = f"  ({conns})" if conns > 0 else ""
-            display_name = f"{name[:24]}{conn_suffix}"
+            display_name = f"{name[:34]}{conn_suffix}"
             slot["name"].configure(text=display_name, text_color=T["text"])
 
             if self.is_admin_mode:
@@ -393,7 +412,7 @@ class LiveAppsPanel(ctk.CTkFrame):
                 )
 
             if not slot["visible"]:
-                slot["frame"].pack(fill="x", padx=4, pady=2)
+                slot["frame"].pack(fill="x", padx=4, pady=1)
                 slot["visible"] = True
 
         for idx in range(len(self._last_data), len(self._rows_pool)):

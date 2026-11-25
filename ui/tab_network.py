@@ -32,64 +32,72 @@ class NetworkTabView(ctk.CTkFrame):
         self.net_cards_frame = ctk.CTkFrame(self, fg_color=T["bg"], corner_radius=0)
         self.net_cards_frame.pack(pady=0, fill="x")
 
-        # کارت دانلود
+        # کارت دانلود (فشرده و مدرن)
         self.card_dl = ctk.CTkFrame(self.net_cards_frame, corner_radius=14, border_width=1.5, border_color=COLOR_GREEN, bg_color=T["bg"])
-        self.card_dl.pack(side="left", expand=True, padx=(0, 6), fill="x", ipady=6)
+        self.card_dl.pack(side="left", expand=True, padx=(0, 6), fill="x", ipady=2)
         self.dl_head = ctk.CTkFrame(self.card_dl, fg_color=T["card"], corner_radius=0)
-        self.dl_head.pack(pady=(10, 0))
+        self.dl_head.pack(pady=(6, 0))
         self.lbl_dl_icon = ctk.CTkLabel(self.dl_head, text="")
-        self.lbl_dl_icon.pack(side="left", padx=(0, 8))
-        self.lbl_dl_title = ctk.CTkLabel(self.dl_head, text="DOWNLOAD SPEED", font=("Segoe UI", 12, "bold"), text_color=COLOR_GREEN)
+        self.lbl_dl_icon.pack(side="left", padx=(0, 6))
+        self.lbl_dl_title = ctk.CTkLabel(self.dl_head, text="DOWNLOAD SPEED", font=("Segoe UI", 11, "bold"), text_color=COLOR_GREEN)
         self.lbl_dl_title.pack(side="left")
-        self.lbl_dl_val = ctk.CTkLabel(self.card_dl, text="0.0", font=("Segoe UI", 36, "bold"))
-        self.lbl_dl_val.pack()
-        self.lbl_dl_unit = ctk.CTkLabel(self.card_dl, text="KB/s", font=("Consolas", 11))
-        self.lbl_dl_unit.pack(pady=(0, 4))
-        self.bar_dl = ctk.CTkProgressBar(self.card_dl, height=6, progress_color=COLOR_GREEN, corner_radius=3)
-        self.bar_dl.pack(padx=34, fill="x")
-        self.bar_dl.set(0)
-        self.lbl_dl_total = ctk.CTkLabel(self.card_dl, text="Session Total: 0.0 KB", font=("Consolas", 11, "bold"))
-        self.lbl_dl_total.pack(pady=(6, 2))
 
-        # کارت آپلود
+        self.dl_val_row = ctk.CTkFrame(self.card_dl, fg_color=T["card"], corner_radius=0)
+        self.dl_val_row.pack(pady=(0, 2))
+        self.lbl_dl_val = ctk.CTkLabel(self.dl_val_row, text="0.0", font=("Segoe UI", 28, "bold"))
+        self.lbl_dl_val.pack(side="left")
+        self.lbl_dl_unit = ctk.CTkLabel(self.dl_val_row, text="KB/s", font=("Consolas", 11, "bold"))
+        self.lbl_dl_unit.pack(side="left", padx=(6, 0), pady=(8, 0))
+
+        self.bar_dl = ctk.CTkProgressBar(self.card_dl, height=5, progress_color=COLOR_GREEN, corner_radius=3)
+        self.bar_dl.pack(padx=34, pady=(2, 0), fill="x")
+        self.bar_dl.set(0)
+        self.lbl_dl_total = ctk.CTkLabel(self.card_dl, text="Session Total: 0.0 KB", font=("Consolas", 10, "bold"))
+        self.lbl_dl_total.pack(pady=(3, 4))
+
+        # کارت آپلود (فشرده و مدرن)
         self.card_ul = ctk.CTkFrame(self.net_cards_frame, corner_radius=14, border_width=1.5, border_color=COLOR_ORANGE, bg_color=T["bg"])
-        self.card_ul.pack(side="right", expand=True, padx=(6, 0), fill="x", ipady=6)
+        self.card_ul.pack(side="right", expand=True, padx=(6, 0), fill="x", ipady=2)
         self.ul_head = ctk.CTkFrame(self.card_ul, fg_color=T["card"], corner_radius=0)
-        self.ul_head.pack(pady=(10, 0))
+        self.ul_head.pack(pady=(6, 0))
         self.lbl_ul_icon = ctk.CTkLabel(self.ul_head, text="")
-        self.lbl_ul_icon.pack(side="left", padx=(0, 8))
-        self.lbl_ul_title = ctk.CTkLabel(self.ul_head, text="UPLOAD SPEED", font=("Segoe UI", 12, "bold"), text_color=COLOR_ORANGE)
+        self.lbl_ul_icon.pack(side="left", padx=(0, 6))
+        self.lbl_ul_title = ctk.CTkLabel(self.ul_head, text="UPLOAD SPEED", font=("Segoe UI", 11, "bold"), text_color=COLOR_ORANGE)
         self.lbl_ul_title.pack(side="left")
-        self.lbl_ul_val = ctk.CTkLabel(self.card_ul, text="0.0", font=("Segoe UI", 36, "bold"))
-        self.lbl_ul_val.pack()
-        self.lbl_ul_unit = ctk.CTkLabel(self.card_ul, text="KB/s", font=("Consolas", 11))
-        self.lbl_ul_unit.pack(pady=(0, 4))
-        self.bar_ul = ctk.CTkProgressBar(self.card_ul, height=6, progress_color=COLOR_ORANGE, corner_radius=3)
-        self.bar_ul.pack(padx=34, fill="x")
+
+        self.ul_val_row = ctk.CTkFrame(self.card_ul, fg_color=T["card"], corner_radius=0)
+        self.ul_val_row.pack(pady=(0, 2))
+        self.lbl_ul_val = ctk.CTkLabel(self.ul_val_row, text="0.0", font=("Segoe UI", 28, "bold"))
+        self.lbl_ul_val.pack(side="left")
+        self.lbl_ul_unit = ctk.CTkLabel(self.ul_val_row, text="KB/s", font=("Consolas", 11, "bold"))
+        self.lbl_ul_unit.pack(side="left", padx=(6, 0), pady=(8, 0))
+
+        self.bar_ul = ctk.CTkProgressBar(self.card_ul, height=5, progress_color=COLOR_ORANGE, corner_radius=3)
+        self.bar_ul.pack(padx=34, pady=(2, 0), fill="x")
         self.bar_ul.set(0)
-        self.lbl_ul_total = ctk.CTkLabel(self.card_ul, text="Session Total: 0.0 KB", font=("Consolas", 11, "bold"))
-        self.lbl_ul_total.pack(pady=(6, 2))
+        self.lbl_ul_total = ctk.CTkLabel(self.card_ul, text="Session Total: 0.0 KB", font=("Consolas", 10, "bold"))
+        self.lbl_ul_total.pack(pady=(3, 4))
 
         # نوار تست سرعت داخلی
         self.speedtest_bar = ctk.CTkFrame(self, corner_radius=12, border_width=1, bg_color=T["bg"])
-        self.speedtest_bar.pack(fill="x", pady=(8, 0))
-        self.lbl_speedtest = ctk.CTkLabel(self.speedtest_bar, text="SPEED TEST: Ready to measure real line throughput (Mbps)", font=("Consolas", 12, "bold"))
-        self.lbl_speedtest.pack(side="left", padx=14, pady=9)
+        self.speedtest_bar.pack(fill="x", pady=(6, 0))
+        self.lbl_speedtest = ctk.CTkLabel(self.speedtest_bar, text="SPEED TEST: Ready to measure real line throughput (Mbps)", font=("Consolas", 11, "bold"))
+        self.lbl_speedtest.pack(side="left", padx=14, pady=6)
         self.btn_speedtest = ctk.CTkButton(
-            self.speedtest_bar, text=" RUN SPEED TEST", compound="left", width=152, height=30,
+            self.speedtest_bar, text=" RUN SPEED TEST", compound="left", width=148, height=26,
             corner_radius=8, font=("Segoe UI", 11, "bold"), fg_color=COLOR_GREEN,
             text_color="#000000", hover_color="#059669", command=self.start_speedtest,
         )
-        self.btn_speedtest.pack(side="right", padx=10, pady=7)
+        self.btn_speedtest.pack(side="right", padx=10, pady=5)
 
         # نمودار زنده پهنای باند
-        self.net_graph_frame = ctk.CTkFrame(self, height=150, corner_radius=14, border_width=1, bg_color=T["bg"])
-        self.net_graph_frame.pack(fill="x", pady=(8, 6))
+        self.net_graph_frame = ctk.CTkFrame(self, height=124, corner_radius=14, border_width=1, bg_color=T["bg"])
+        self.net_graph_frame.pack(fill="x", pady=(6, 6))
         self.net_graph_frame.pack_propagate(False)
         self.lbl_net_graph_title = ctk.CTkLabel(self.net_graph_frame, text="LIVE BANDWIDTH MONITOR  •  HD ANTI-ALIASED  (HOVER TO INSPECT)", font=("Consolas", 10, "bold"))
-        self.lbl_net_graph_title.pack(pady=(8, 0))
+        self.lbl_net_graph_title.pack(pady=(5, 0))
         self.net_canvas = tk.Canvas(self.net_graph_frame, highlightthickness=0, cursor="crosshair")
-        self.net_canvas.pack(fill="both", expand=True, padx=12, pady=(4, 10))
+        self.net_canvas.pack(fill="both", expand=True, padx=12, pady=(2, 8))
         self.net_canvas.bind("<Configure>", lambda e: self.draw_net_graph(rebuild_base=True))
         self.net_canvas.bind("<Motion>", self._on_hover)
         self.net_canvas.bind("<Leave>", self._on_leave)
@@ -102,7 +110,7 @@ class NetworkTabView(ctk.CTkFrame):
             on_request_admin=self.app.request_admin_elevation,
             on_reset_totals=self.app.reset_app_usage_totals,
         )
-        self.apps_panel.pack(fill="both", expand=True, pady=(2, 4))
+        self.apps_panel.pack(fill="both", expand=True, pady=(0, 2))
 
     def apply_theme(self, T, icons):
         self.configure(fg_color=T["bg"])
@@ -116,6 +124,7 @@ class NetworkTabView(ctk.CTkFrame):
 
         self.card_dl.configure(fg_color=T["card"], bg_color=T["bg"])
         self.dl_head.configure(fg_color=T["card"])
+        self.dl_val_row.configure(fg_color=T["card"])
         self.lbl_dl_val.configure(text_color=T["text"], bg_color=T["card"])
         self.lbl_dl_unit.configure(text_color=T["muted"], bg_color=T["card"])
         self.bar_dl.configure(fg_color=T["border"], bg_color=T["card"])
@@ -123,6 +132,7 @@ class NetworkTabView(ctk.CTkFrame):
 
         self.card_ul.configure(fg_color=T["card"], bg_color=T["bg"])
         self.ul_head.configure(fg_color=T["card"])
+        self.ul_val_row.configure(fg_color=T["card"])
         self.lbl_ul_val.configure(text_color=T["text"], bg_color=T["card"])
         self.lbl_ul_unit.configure(text_color=T["muted"], bg_color=T["card"])
         self.bar_ul.configure(fg_color=T["border"], bg_color=T["card"])

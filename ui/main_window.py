@@ -69,7 +69,7 @@ class NetworkToolsApp(ctk.CTk):
         self.mini_opacity = float(self.config_data.get("mini_opacity", 0.92))
         self.mini_style = self.config_data.get("mini_style", "card")
         self.mini_pos = self.config_data.get("mini_pos", None)
-        self.vpn_alert = self.config_data.get("vpn_alert", True)
+        self.vpn_win_notify = self.config_data.get("vpn_win_notify", False)
         self.high_ping_threshold = int(self.config_data.get("high_ping_threshold", 0))
         self.last_high_ping_alert = 0.0
 
@@ -270,7 +270,7 @@ class NetworkToolsApp(ctk.CTk):
                 "mini_opacity": self.mini_opacity,
                 "mini_style": self.mini_style,
                 "mini_pos": self.mini_pos,
-                "vpn_alert": self.vpn_alert,
+                "vpn_win_notify": self.vpn_win_notify,
                 "high_ping_threshold": self.high_ping_threshold,
                 "dns_servers": self.dns_servers,
                 "lan_names": self.lan_names,
@@ -976,7 +976,7 @@ class NetworkToolsApp(ctk.CTk):
             time_str = datetime.now().strftime("%H:%M:%S")
             loc_str = f" ({new_loc})" if new_loc else ""
             self.tab_ping_view.append_info_log(time_str, f"IP CHANGED -> {new_ip}{loc_str}")
-            if self.vpn_alert:
+            if self.vpn_win_notify:
                 title = "VPN Disconnected (IR IP!)" if new_loc.endswith("IR") else "IP / VPN Changed"
                 show_os_notification(title, f"New IP: {new_ip}{loc_str}")
                 self.sound.play("warn")

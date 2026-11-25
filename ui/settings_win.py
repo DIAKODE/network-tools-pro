@@ -140,7 +140,7 @@ def open_settings_modal(app):
     op_slider.set(app.mini_opacity)
     op_slider.pack(fill="x", padx=12, pady=(0, 12))
 
-    # --- بخش ۵: هشدار پینگ بالا و تغییر VPN ---
+    # --- بخش ۵: هشدار پینگ بالا و نوتیفیکیشن تغییر IP ---
     ctk.CTkLabel(card, text="High Ping Alert Threshold", font=("Segoe UI", 12, "bold"), text_color=T["text"], bg_color=T["card"]).pack(anchor="w", padx=12, pady=(4, 3))
     hp_map = {"Off": 0, "Above 120 ms": 120, "Above 150 ms": 150, "Above 180 ms": 180, "Above 220 ms": 220, "Above 250 ms": 250}
     hp_rev = {v: k for k, v in hp_map.items()}
@@ -155,14 +155,14 @@ def open_settings_modal(app):
         fg_color=T["inner"], bg_color=T["card"], button_color=COLOR_ORANGE, text_color=T["text"], command=set_hp,
     ).pack(fill="x", padx=12, pady=(0, 10))
 
-    vpn_var = ctk.BooleanVar(value=app.vpn_alert)
+    vpn_var = ctk.BooleanVar(value=app.vpn_win_notify)
 
     def set_vpn():
-        app.vpn_alert = vpn_var.get()
+        app.vpn_win_notify = vpn_var.get()
         app.save_config()
 
     ctk.CTkSwitch(
-        card, text="VPN / IP Change Kill-Alert", variable=vpn_var, bg_color=T["card"],
+        card, text="Windows Notification on IP / VPN Change", variable=vpn_var, bg_color=T["card"],
         font=("Segoe UI", 12), text_color=T["text"], progress_color=COLOR_ORANGE, command=set_vpn,
     ).pack(anchor="w", padx=12, pady=6)
 
