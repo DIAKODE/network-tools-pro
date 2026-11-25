@@ -352,3 +352,99 @@ class SoundManager:
                 winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
             except Exception:
                 pass
+                import os
+import sys
+import ctypes
+import psutil
+from core.net_etw import PROTECTED_PROCESSES
+
+
+def is_admin() -> bool:
+    try:
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:
+        return False
+
+
+def relaunch_as_admin(instance_mgr=None, extra_args: str = "--tab net") -> bool:
+    """
+    ری‌استارت برنامه با دسترسی Administrator و باز شدن مستقیم در تب Network Usage.
+    اگر کاربر پنجره UAC را Cancel کند، False برمی‌گرداند و برنامه فعلی بسته نمی‌شود.
+    """
+    # آزادسازی موقت Mutex تک‌اجرایی تا نسخه جدید بدون مشکل باز شود
+    released_mutex = False
+    if instance_mgr is not None:
+        try:
+            if hasattr(instance_mgr, "release"):
+                instance_mgr.release()
+                released_mutex = True
+            elif getattr(instance_mgr, "mutex", None):
+                ctypes.windll.kernel32.CloseHandle(instance_mgr.mutex)
+                instance_mgr.mutex = None
+                released_mutex = True
+        except Exception:
+            pass
+
+    if getattr(sys, "frozen", False):
+        exe = sys.executable
+        params = extra_args
+    else:
+        exe = sys.executable
+        script = os.path.abspath(sys.argv[0])
+        params = f'"{script}" {extra_args}'
+
+    res = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, params, os.getcwd(), 1)
+    if res > 32:
+        return True
+
+    # کاربر Cancel زده؛ دوباره Mutex را پس بگیر
+    if released_mutex and instance_mgr is not None:
+        try:
+            if hasattr(instance_mgr, "acquire"):
+                instance_mgr.acquire()
+        except Exception:
+            pass
+    return False
+
+
+def kill_app_processes(app_name: str) -> tuple[int, int]:
+    """
+    بستن تمام پروسه‌های مربوط به یک برنامه (مثلاً chrome.exe).
+    خروجی: (تعداد بسته‌شده، تعداد ناموفق)
+    """
+    key = (app_name or "").strip().lower()
+    if not key or key in PROTECTED_PROCESSES:
+        return (0, 0)
+
+    own_pid = os.getpid()
+    targets = []
+    for proc in psutil.process_iter(["pid", "name"]):
+        try:
+            if proc.info["pid"] == own_pid:
+                continue
+            if (proc.info["name"] or "").lower() == key:
+                targets.append(proc)
+        except Exception:
+            continue
+
+    killed = 0
+    failed = 0
+    for proc in targets:
+        try:
+            proc.terminate()
+        except Exception:
+            failed += 1
+
+    try:
+        gone, alive = psutil.wait_procs(targets, timeout=0.6)
+        killed += len(gone)
+        for proc in alive:
+            try:
+                proc.kill()
+                killed += 1
+            except Exception:
+                failed += 1
+    except Exception:
+        pass
+
+    return (killed, failed)
