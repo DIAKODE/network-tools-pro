@@ -46,7 +46,8 @@
 - **Live Throughput Dashboard:** Real-time Download/Upload speeds, session data totals, and a 2× SSAA bandwidth chart with hover inspection.
 - **Built-in Speed Test:** Measure real line throughput (Average & Peak Mbps / MB/s) directly inside the app.
 - **Active Connections Inspector:** Live list of processes currently holding established network connections.
-
+- **Per-App Bandwidth Monitor & Killer:** View live per-application Download/Upload speeds and session totals via Windows ETW (optional one-click Admin mode) with a protected two-step `KILL` button.
+  
 ### 🌐 DNS Manager & Game Route Check
 - **Parallel DNS Benchmark:** Test all configured DNS servers simultaneously and rank them by packet loss and average latency.
 - **One-Click System DNS Control:** Apply Primary + Secondary DNS to active Windows adapters, reset to DHCP, or flush Windows DNS cache.
