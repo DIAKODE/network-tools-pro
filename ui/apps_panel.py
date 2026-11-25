@@ -35,6 +35,7 @@ class LiveAppsPanel(ctk.CTkFrame):
         super().__init__(
             master,
             fg_color=theme["card"],
+            bg_color=theme["bg"],
             border_width=1,
             border_color=theme["border"],
             corner_radius=12,
@@ -51,29 +52,36 @@ class LiveAppsPanel(ctk.CTkFrame):
 
         self._build_ui()
 
+    def _is_dark(self) -> bool:
+        return str(self.T.get("mode", "Dark")).lower() == "dark"
+
     def _build_ui(self):
+        T = self.T
+
         # هدر پنل
-        self.hdr = ctk.CTkFrame(self, fg_color="transparent")
+        self.hdr = ctk.CTkFrame(self, fg_color=T["card"], corner_radius=0)
         self.hdr.pack(fill="x", padx=12, pady=(10, 6))
 
-        left = ctk.CTkFrame(self.hdr, fg_color="transparent")
-        left.pack(side="left", fill="x", expand=True)
+        self.hdr_left = ctk.CTkFrame(self.hdr, fg_color=T["card"], corner_radius=0)
+        self.hdr_left.pack(side="left", fill="x", expand=True)
 
         self.lbl_title = ctk.CTkLabel(
-            left,
+            self.hdr_left,
             text="PER-APP NETWORK MONITOR",
             font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
-            text_color=self.T["text"],
+            text_color=T["text"],
+            bg_color=T["card"],
         )
         self.lbl_title.pack(side="left")
 
         badge_text = "  LIVE • ADMIN  " if self.is_admin_mode else "  STANDARD MODE  "
         badge_color = COLOR_GREEN if self.is_admin_mode else COLOR_ORANGE
         self.lbl_mode_badge = ctk.CTkLabel(
-            left,
+            self.hdr_left,
             text=badge_text,
             font=ctk.CTkFont(family="Consolas", size=10, weight="bold"),
-            fg_color=self.T["card_elev"],
+            fg_color=T["card_elev"],
+            bg_color=T["card"],
             text_color=badge_color,
             corner_radius=6,
             height=20,
@@ -89,9 +97,10 @@ class LiveAppsPanel(ctk.CTkFrame):
                 height=26,
                 corner_radius=7,
                 font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
-                fg_color=self.T["card_elev"],
-                hover_color=self.T["border"],
-                text_color=self.T["muted"],
+                fg_color=T["card_elev"],
+                bg_color=T["card"],
+                hover_color=T["border"],
+                text_color=T["muted"],
                 command=self._handle_reset,
             )
             self.btn_action.pack(side="right")
@@ -99,13 +108,14 @@ class LiveAppsPanel(ctk.CTkFrame):
             self.btn_action = ctk.CTkButton(
                 self.hdr,
                 text="ENABLE LIVE APP USAGE (ADMIN)",
-                width=210,
+                width=212,
                 height=26,
                 corner_radius=7,
                 font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
-                fg_color=self.T["accent1"],
-                hover_color=self.T.get("accent2", self.T["accent1"]),
-                text_color="#090D16",
+                fg_color=T["accent1"],
+                bg_color=T["card"],
+                hover_color=T.get("accent2", T["accent1"]),
+                text_color="#000000" if self._is_dark() else "#FFFFFF",
                 command=self._handle_request_admin,
             )
             self.btn_action.pack(side="right")
@@ -117,13 +127,20 @@ class LiveAppsPanel(ctk.CTkFrame):
                 self,
                 text="Showing active apps with KILL support. Click 'ENABLE LIVE APP USAGE (ADMIN)' to view real-time KB/s & MB per app.",
                 font=ctk.CTkFont(family="Segoe UI", size=10),
-                text_color=self.T["muted"],
+                text_color=T["muted"],
+                bg_color=T["card"],
                 anchor="w",
             )
             self.banner.pack(fill="x", padx=12, pady=(0, 6))
 
         # ردیف عنوان ستون‌ها
-        self.col_hdr = ctk.CTkFrame(self, fg_color=self.T["card_elev"], corner_radius=7, height=26)
+        self.col_hdr = ctk.CTkFrame(
+            self,
+            fg_color=T["card_elev"],
+            bg_color=T["card"],
+            corner_radius=7,
+            height=26,
+        )
         self.col_hdr.pack(fill="x", padx=10, pady=(0, 4))
         self.col_hdr.pack_propagate(False)
 
@@ -146,19 +163,20 @@ class LiveAppsPanel(ctk.CTkFrame):
                 self.col_hdr,
                 text=text,
                 font=ctk.CTkFont(family="Consolas", size=10, weight="bold"),
-                text_color=self.T["muted"],
+                text_color=T["muted"],
+                bg_color=T["card_elev"],
                 anchor=anchor,
             )
             lbl.grid(row=0, column=col, sticky="ew", padx=(10 if col == 0 else 6, 10 if col == 4 else 6), pady=4)
             self._col_labels.append(lbl)
 
-        # لیست اسکرول‌پذیر ردیف‌ها
+        # لیست اسکرول‌پذیر ردیف‌ها (متناسب با ارتفاع پنجره 860px)
         self.scroll = ctk.CTkScrollableFrame(
             self,
-            fg_color="transparent",
-            scrollbar_button_color=self.T["border"],
-            scrollbar_button_hover_color=self.T["accent1"],
-            height=180,
+            fg_color=T["card"],
+            scrollbar_button_color=T["border"],
+            scrollbar_button_hover_color=T["accent1"],
+            height=110,
         )
         self.scroll.pack(fill="both", expand=True, padx=6, pady=(0, 8))
 
@@ -166,12 +184,20 @@ class LiveAppsPanel(ctk.CTkFrame):
             self.scroll,
             text="No active network applications detected yet...",
             font=ctk.CTkFont(family="Segoe UI", size=11),
-            text_color=self.T["muted"],
+            text_color=T["muted"],
+            bg_color=T["card"],
         )
         self.lbl_empty.pack(pady=24)
 
     def _create_row_widget(self):
-        frame = ctk.CTkFrame(self.scroll, fg_color=self.T["card_elev"], corner_radius=8, height=34)
+        T = self.T
+        frame = ctk.CTkFrame(
+            self.scroll,
+            fg_color=T["card_elev"],
+            bg_color=T["card"],
+            corner_radius=8,
+            height=34,
+        )
         frame.pack_propagate(False)
         frame.grid_columnconfigure(0, weight=4)
         frame.grid_columnconfigure(1, weight=2)
@@ -183,7 +209,8 @@ class LiveAppsPanel(ctk.CTkFrame):
             frame,
             text="",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color=self.T["text"],
+            text_color=T["text"],
+            bg_color=T["card_elev"],
             anchor="w",
         )
         lbl_name.grid(row=0, column=0, sticky="ew", padx=(10, 6), pady=4)
@@ -192,7 +219,8 @@ class LiveAppsPanel(ctk.CTkFrame):
             frame,
             text="—",
             font=ctk.CTkFont(family="Consolas", size=11, weight="bold"),
-            text_color=self.T["muted"],
+            text_color=T["muted"],
+            bg_color=T["card_elev"],
             anchor="e",
         )
         lbl_dl.grid(row=0, column=1, sticky="ew", padx=6, pady=4)
@@ -201,7 +229,8 @@ class LiveAppsPanel(ctk.CTkFrame):
             frame,
             text="—",
             font=ctk.CTkFont(family="Consolas", size=11),
-            text_color=self.T["muted"],
+            text_color=T["muted"],
+            bg_color=T["card_elev"],
             anchor="e",
         )
         lbl_ul.grid(row=0, column=2, sticky="ew", padx=6, pady=4)
@@ -210,7 +239,8 @@ class LiveAppsPanel(ctk.CTkFrame):
             frame,
             text="—",
             font=ctk.CTkFont(family="Consolas", size=11),
-            text_color=self.T["muted"],
+            text_color=T["muted"],
+            bg_color=T["card_elev"],
             anchor="e",
         )
         lbl_tot.grid(row=0, column=3, sticky="ew", padx=6, pady=4)
@@ -222,9 +252,11 @@ class LiveAppsPanel(ctk.CTkFrame):
             height=22,
             corner_radius=6,
             font=ctk.CTkFont(family="Consolas", size=10, weight="bold"),
-            fg_color="#3B151B",
+            fg_color="#3B151B" if self._is_dark() else "#FEE2E2",
+            bg_color=T["card_elev"],
             hover_color=COLOR_RED,
             text_color=COLOR_RED,
+            text_color_disabled=T["muted"],
         )
         btn_kill.grid(row=0, column=4, sticky="e", padx=(6, 8), pady=5)
 
@@ -292,6 +324,9 @@ class LiveAppsPanel(ctk.CTkFrame):
         while len(self._rows_pool) < len(self._last_data):
             self._rows_pool.append(self._create_row_widget())
 
+        T = self.T
+        is_dark = self._is_dark()
+
         for idx, item in enumerate(self._last_data):
             slot = self._rows_pool[idx]
             name = item["name"]
@@ -301,7 +336,7 @@ class LiveAppsPanel(ctk.CTkFrame):
 
             conn_suffix = f"  ({conns})" if conns > 0 else ""
             display_name = f"{name[:24]}{conn_suffix}"
-            slot["name"].configure(text=display_name, text_color=self.T["text"])
+            slot["name"].configure(text=display_name, text_color=T["text"])
 
             if self.is_admin_mode:
                 dl_bps = item.get("dl_bps", 0.0)
@@ -310,28 +345,30 @@ class LiveAppsPanel(ctk.CTkFrame):
 
                 slot["dl"].configure(
                     text=_fmt_rate(dl_bps),
-                    text_color=COLOR_GREEN if dl_bps >= 1024 else self.T["muted"],
+                    text_color=COLOR_GREEN if dl_bps >= 1024 else T["muted"],
                 )
                 slot["ul"].configure(
                     text=_fmt_rate(ul_bps),
-                    text_color=COLOR_ORANGE if ul_bps >= 1024 else self.T["muted"],
+                    text_color=COLOR_ORANGE if ul_bps >= 1024 else T["muted"],
                 )
                 slot["tot"].configure(
                     text=_fmt_total(tot_bytes),
-                    text_color=self.T["text"] if tot_bytes > 0 else self.T["muted"],
+                    text_color=T["text"] if tot_bytes > 0 else T["muted"],
                 )
             else:
-                slot["dl"].configure(text="Admin", text_color=self.T["muted"])
-                slot["ul"].configure(text="Admin", text_color=self.T["muted"])
-                slot["tot"].configure(text=f"{conns} conn", text_color=self.T["accent1"] if conns else self.T["muted"])
+                slot["dl"].configure(text="Admin", text_color=T["muted"])
+                slot["ul"].configure(text="Admin", text_color=T["muted"])
+                slot["tot"].configure(text=f"{conns} conn", text_color=T["accent1"] if conns else T["muted"])
 
             # وضعیت دکمه KILL / SURE? / SYS
             if protected:
                 slot["kill"].configure(
                     text="SYS",
                     state="disabled",
-                    fg_color=self.T["card"],
-                    text_color=self.T["muted"],
+                    fg_color=T["card"],
+                    bg_color=T["card_elev"],
+                    text_color=T["muted"],
+                    text_color_disabled=T["muted"],
                     command=lambda: None,
                 )
             elif self._confirm_key == key:
@@ -339,6 +376,7 @@ class LiveAppsPanel(ctk.CTkFrame):
                     text="SURE?",
                     state="normal",
                     fg_color=COLOR_RED,
+                    bg_color=T["card_elev"],
                     hover_color="#DC2626",
                     text_color="#FFFFFF",
                     command=lambda n=name, k=key: self._on_kill_click(n, k),
@@ -347,7 +385,8 @@ class LiveAppsPanel(ctk.CTkFrame):
                 slot["kill"].configure(
                     text="KILL",
                     state="normal",
-                    fg_color="#3B151B" if self.T.get("mode", "dark") == "dark" else "#FEE2E2",
+                    fg_color="#3B151B" if is_dark else "#FEE2E2",
+                    bg_color=T["card_elev"],
                     hover_color=COLOR_RED,
                     text_color=COLOR_RED,
                     command=lambda n=name, k=key: self._on_kill_click(n, k),
@@ -365,30 +404,48 @@ class LiveAppsPanel(ctk.CTkFrame):
 
     def apply_theme(self, theme: dict):
         self.T = theme
-        self.configure(fg_color=theme["card"], border_color=theme["border"])
-        self.lbl_title.configure(text_color=theme["text"])
-        self.lbl_mode_badge.configure(fg_color=theme["card_elev"])
-        self.col_hdr.configure(fg_color=theme["card_elev"])
+        T = theme
+        self.configure(fg_color=T["card"], bg_color=T["bg"], border_color=T["border"])
+        self.hdr.configure(fg_color=T["card"])
+        self.hdr_left.configure(fg_color=T["card"])
+        self.lbl_title.configure(text_color=T["text"], bg_color=T["card"])
+        self.lbl_mode_badge.configure(fg_color=T["card_elev"], bg_color=T["card"])
+        self.col_hdr.configure(fg_color=T["card_elev"], bg_color=T["card"])
+
         for lbl in self._col_labels:
-            lbl.configure(text_color=theme["muted"])
+            lbl.configure(text_color=T["muted"], bg_color=T["card_elev"])
+
         if self.banner is not None:
-            self.banner.configure(text_color=theme["muted"])
+            self.banner.configure(text_color=T["muted"], bg_color=T["card"])
+
         if self.is_admin_mode:
             self.btn_action.configure(
-                fg_color=theme["card_elev"],
-                hover_color=theme["border"],
-                text_color=theme["muted"],
+                fg_color=T["card_elev"],
+                bg_color=T["card"],
+                hover_color=T["border"],
+                text_color=T["muted"],
             )
         else:
             self.btn_action.configure(
-                fg_color=theme["accent1"],
-                hover_color=theme.get("accent2", theme["accent1"]),
+                fg_color=T["accent1"],
+                bg_color=T["card"],
+                hover_color=T.get("accent2", T["accent1"]),
+                text_color="#000000" if self._is_dark() else "#FFFFFF",
             )
+
         self.scroll.configure(
-            scrollbar_button_color=theme["border"],
-            scrollbar_button_hover_color=theme["accent1"],
+            fg_color=T["card"],
+            scrollbar_button_color=T["border"],
+            scrollbar_button_hover_color=T["accent1"],
         )
-        self.lbl_empty.configure(text_color=theme["muted"])
+        self.lbl_empty.configure(text_color=T["muted"], bg_color=T["card"])
+
         for slot in self._rows_pool:
-            slot["frame"].configure(fg_color=theme["card_elev"])
+            slot["frame"].configure(fg_color=T["card_elev"], bg_color=T["card"])
+            slot["name"].configure(bg_color=T["card_elev"])
+            slot["dl"].configure(bg_color=T["card_elev"])
+            slot["ul"].configure(bg_color=T["card_elev"])
+            slot["tot"].configure(bg_color=T["card_elev"])
+            slot["kill"].configure(bg_color=T["card_elev"])
+
         self.update_rows(self._last_data)
