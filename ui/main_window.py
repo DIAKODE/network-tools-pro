@@ -14,8 +14,9 @@ from core.config import (
     CORE_TARGETS, CUSTOM_TARGET_OPTION, DEFAULT_DNS_LIST, THEMES,
     get_app_paths, get_health_color, load_config, save_config,
 )
-from core.net_engine import fetch_geo_for_ip, fetch_public_ip, get_active_network_apps, get_ping
-from core.win_audio import SoundManager, show_os_notification
+from core.net_engine import fetch_geo_for_ip, fetch_public_ip, get_ping
+from core.net_etw import PerAppNetworkMonitor
+from core.win_audio import SoundManager, is_admin, relaunch_as_admin, show_os_notification
 from ui.graphics import build_pulse_icon, hex_to_rgba, render_aa_icon, render_aa_status_led
 from ui.settings_win import open_settings_modal, refresh_settings_targets_ui
 from ui.tab_dns import DnsTabView
@@ -105,6 +106,10 @@ class NetworkToolsApp(ctk.CTk):
         self.reset_stats()
         self.start_net = psutil.net_io_counters()
 
+        # موتور مانیتور مصرف شبکه به تفکیک هر برنامه (در حالت Admin کرنل ETW روشن می‌شود)
+        self.per_app_monitor = PerAppNetworkMonitor()
+        self.is_etw_active = self.per_app_monitor.start() if is_admin() else False
+
         self.led_live_frames = [
             ctk.CTkImage(
                 light_image=render_aa_status_led(COLOR_GREEN, g, 18),
@@ -134,6 +139,14 @@ class NetworkToolsApp(ctk.CTk):
 
         if "--minimized" in sys.argv:
             self.after(120, self.hide_window)
+
+        if "--tab" in sys.argv:
+            try:
+                target_tab = sys.argv[sys.argv.index("--tab") + 1]
+                if target_tab in ("ping", "net", "dns", "lan"):
+                    self.after(120, lambda t=target_tab: self.switch_tab(t))
+            except Exception:
+                pass
 
         if self.instance_mgr:
             threading.Thread(target=self._single_instance_listener, daemon=True).start()
@@ -189,20 +202,55 @@ class NetworkToolsApp(ctk.CTk):
         self.focus_force()
         self.after(180, lambda: self.attributes("-topmost", True if self.is_mini else self.is_pinned))
 
+    def request_admin_elevation(self):
+        """ارتقای اختیاری به حالت Admin و بازگشایی مستقیم در تب Network Usage"""
+        try:
+            self.per_app_monitor.stop()
+        except Exception:
+            pass
+
+        # آزادسازی Mutex تک‌اجرایی قبل از اجرای نسخه Admin تا تداخلی پیش نیاید
+        mgr = self.instance_mgr
+        self.instance_mgr = None
+        if mgr:
+            try:
+                mgr.cleanup()
+            except Exception:
+                pass
+
+        if relaunch_as_admin(None, extra_args="--tab net"):
+            self.quit_window()
+
+    def reset_app_usage_totals(self):
+        self.per_app_monitor.reset_totals()
+        snap = self.per_app_monitor.get_snapshot(limit=22)
+        self.tab_net_view.apps_panel.update_rows(snap)
+
     def quit_window(self):
         self.app_alive = False
         self.is_running = False
         self.tab_lan_view.auto_scan = False
+        try:
+            self.per_app_monitor.stop()
+        except Exception:
+            pass
         self.save_config()
         self.tray_mini.stop_tray()
         if self.instance_mgr:
-            self.instance_mgr.cleanup()
+            try:
+                self.instance_mgr.cleanup()
+            except Exception:
+                pass
+            self.instance_mgr = None
         self.destroy()
 
     def _single_instance_listener(self):
-        while self.app_alive:
-            if self.instance_mgr.wait_for_show(500):
-                self.after(0, self.restore_window)
+        while self.app_alive and self.instance_mgr:
+            try:
+                if self.instance_mgr.wait_for_show(500):
+                    self.after(0, self.restore_window)
+            except Exception:
+                break
 
     def save_config(self):
         save_config(
@@ -510,7 +558,7 @@ class NetworkToolsApp(ctk.CTk):
         elif tab_name == "net":
             self.btn_tab_net.configure(fg_color=COLOR_GREEN, hover_color=COLOR_GREEN, text_color="#000000", image=self.ui_icons.get("net_on"))
             self.tab_net_view.pack(padx=20, pady=4, fill="both", expand=True)
-            self.after(30, lambda: self.tab_net_view.draw_net_graph(rebuild_base=True))
+            self.tab_net_view.on_tab_selected()
         elif tab_name == "dns":
             self.btn_tab_dns.configure(fg_color=T["accent2"], hover_color=T["accent2"], text_color="#FFFFFF", image=self.ui_icons.get("dns_on"))
             self.tab_dns_view.pack(padx=20, pady=4, fill="both", expand=True)
@@ -840,7 +888,7 @@ class NetworkToolsApp(ctk.CTk):
 
             total_dl = max(0, cur.bytes_recv - self.start_net.bytes_recv)
             total_ul = max(0, cur.bytes_sent - self.start_net.bytes_sent)
-            apps = get_active_network_apps()
+            apps = self.per_app_monitor.get_snapshot(limit=22)
 
             if self.app_alive:
                 self.after(0, self._on_network_tick, dl, ul, total_dl, total_ul, apps)
