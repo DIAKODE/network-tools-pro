@@ -2,7 +2,7 @@ import json
 import os
 
 APP_NAME = "Network Tools Pro"
-APP_VERSION = "6.2"
+APP_VERSION = "6.2.1"
 
 COLOR_GREEN = "#10B981"
 COLOR_YELLOW = "#F59E0B"

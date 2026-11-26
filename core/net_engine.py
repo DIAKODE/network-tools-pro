@@ -10,6 +10,9 @@ from concurrent.futures import ThreadPoolExecutor
 import psutil
 from core.config import is_valid_ipv4, lookup_mac_vendor
 
+_DIRECT_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+_TRACE_CC_CACHE = {}
+
 
 def get_ping(target, timeout_ms=1000):
     try:
@@ -32,18 +35,43 @@ def get_ping(target, timeout_ms=1000):
 
 
 def fetch_public_ip():
+    # اولویت اول: اتصال مستقیم HTTPS به IP کلودفلر (ضد پروکسی شفاف پورت ۸۰ و ضد دست‌کاری DNS)
+    for trace_url in ("https://1.1.1.1/cdn-cgi/trace", "https://1.0.0.1/cdn-cgi/trace"):
+        try:
+            req = urllib.request.Request(
+                trace_url,
+                headers={"User-Agent": "NetworkToolsPro/6.2", "Cache-Control": "no-cache"},
+            )
+            with _DIRECT_OPENER.open(req, timeout=3.5) as resp:
+                raw = resp.read().decode("utf-8", errors="ignore")
+                info = {}
+                for line in raw.splitlines():
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        info[k.strip()] = v.strip()
+                ip = info.get("ip", "")
+                cc = info.get("loc", "").upper()
+                if is_valid_ipv4(ip):
+                    if len(cc) == 2:
+                        _TRACE_CC_CACHE[ip] = cc
+                    return ip
+        except Exception:
+            continue
+
+    # اولویت دوم: سرویس‌های پشتیبان تماماً HTTPS
     endpoints = [
-        "http://api.ipify.org",
-        "http://icanhazip.com",
-        "http://checkip.amazonaws.com",
         "https://api.ipify.org",
+        "https://icanhazip.com",
+        "https://checkip.amazonaws.com",
     ]
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     for ep in endpoints:
         try:
             url = f"{ep}?t={int(time.time())}"
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Cache-Control": "no-cache"})
-            with opener.open(req, timeout=3) as resp:
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": "NetworkToolsPro/6.2", "Cache-Control": "no-cache"},
+            )
+            with _DIRECT_OPENER.open(req, timeout=3.5) as resp:
                 ip = resp.read().decode("utf-8", errors="ignore").strip()
                 if is_valid_ipv4(ip):
                     return ip
@@ -52,7 +80,7 @@ def fetch_public_ip():
 
     try:
         out = subprocess.check_output(
-            ["curl", "-s", "--max-time", "3", "http://api.ipify.org"],
+            ["curl", "-s", "--noproxy", "*", "--max-time", "3", "https://api.ipify.org"],
             creationflags=subprocess.CREATE_NO_WINDOW,
             universal_newlines=True,
             errors="ignore",
@@ -71,18 +99,17 @@ def fetch_geo_for_ip(ip, cache):
         return cache[ip]
 
     geo_apis = [
-        (f"http://ip-api.com/json/{ip}?fields=status,countryCode,city", "countryCode", "city", "status", "success"),
+        (f"https://ipwho.is/{ip}", "country_code", "city", "success", True),
         (f"https://get.geojs.io/v1/ip/geo/{ip}.json", "country_code", "city", None, None),
-        (f"http://ipwho.is/{ip}", "country_code", "city", "success", True),
+        (f"https://ipapi.co/{ip}/json/", "country_code", "city", None, None),
         (f"https://ipinfo.io/{ip}/json", "country", "city", None, None),
         (f"https://freeipapi.com/api/json/{ip}", "countryCode", "cityName", None, None),
     ]
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
     for api_url, country_key, city_key, ok_key, ok_val in geo_apis:
         try:
-            req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0"})
-            with opener.open(req, timeout=4) as resp:
+            req = urllib.request.Request(api_url, headers={"User-Agent": "NetworkToolsPro/6.2"})
+            with _DIRECT_OPENER.open(req, timeout=4) as resp:
                 data = json.loads(resp.read().decode("utf-8", errors="ignore"))
                 if ok_key is not None and data.get(ok_key) != ok_val:
                     continue
@@ -96,6 +123,12 @@ def fetch_geo_for_ip(ip, cache):
                     return loc
         except Exception:
             continue
+
+    fallback_cc = _TRACE_CC_CACHE.get(ip, "")
+    if fallback_cc:
+        cache[ip] = fallback_cc
+        return fallback_cc
+
     return ""
 
 
